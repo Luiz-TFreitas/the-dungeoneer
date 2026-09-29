@@ -129,7 +129,7 @@ DESCRICOES = {
         "A escadaria pela qual desceu agora termina sob toneladas de rocha. "
         "O ar cheira a ferrugem, terra molhada e algo vagamente doce demais."
     ),
-    (1, 3): (
+    (3, 5): (
         "Um nicho foi escavado na parede. Dentro dele repousa uma lâmina curta, "
         "coberta por uma crosta escura que você prefere acreditar ser ferrugem."
     ),
@@ -204,7 +204,7 @@ DESCRICOES = {
 }
 
 PREVISOES = {
-    (1, 3): "Você distingue o brilho opaco de uma pequena lâmina dentro de um nicho.",
+    (3, 5): "Você distingue o brilho opaco de uma pequena lâmina dentro de um nicho.",
     (1, 11): "Há uma câmara aberta adiante e algo pendurado sobre um pedestal.",
     (3, 9): "Uma névoa esverdeada ocupa a passagem. O cheiro é acre e adocicado.",
     (3, 10): "Você vê pegadas molhadas desaparecendo na escuridão.",
@@ -221,11 +221,15 @@ PREVISOES = {
         "Você sente um cheiro sufocante de sangue velho. "
         "Algo muito grande parece respirar adiante. Continuar seria uma escolha consciente."
     ),
+    (2, 5): (
+    "Você ouve dezenas de pequenas unhas arranhando a pedra adiante. "
+    "Na penumbra, o chão parece ondular."
+    )
 }
 
 
 ITENS_INICIAIS = {
-    (1, 3): [
+    (3, 5): [
         {"nome": "Adaga Enferrujada", "tipo": "arma", "dado": (1, 6),
          "descricao": "Uma adaga curta. Dano: 1d6."}
     ],
@@ -265,17 +269,39 @@ ITENS_INICIAIS = {
 
 
 INIMIGOS_INICIAIS = {
+    (2, 5): {
+    "nome": "Enxame de Ratos",
+    "vida": 5,
+    "dano": (1, 4),
+    "terrivel": False,
+    "descricao": (
+        "O chão parece se mover antes que você perceba o motivo. "
+        "Dezenas de ratos surgem pelas rachaduras, magros demais, com o pelo colado ao corpo por sujeira e sangue. "
+        "Alguns têm olhos esbranquiçados; outros não têm olhos sequer. "
+        "Eles avançam uns sobre os outros, formando uma massa viva de dentes e caudas."
+    ),
+    "mensagem_derrota": (
+        "A massa se desfaz em guinchos desesperados. "
+        "Alguns ratos desaparecem pelas rachaduras, enquanto os demais "
+        "formam uma camada de corpos imóveis sobre a pedra."
+    ),
+    "pontos": 20,
+    },
     (3, 10): {
         "nome": "Rastejante Pálido",
-        "vida": 7,
-        "dano": (1, 4),
+        "vida": 12,
+        "dano": (1, 6),
         "terrivel": False,
         "descricao": (
             "Uma criatura do tamanho de uma criança sai de trás da rocha. "
             "Ela se move sobre quatro membros humanos, mas todos os joelhos dobram para o lado errado. "
             "A cabeça não possui olhos. Mesmo assim, ela olha diretamente para você."
         ),
-        "pontos": 35,
+        "mensagem_derrota": (
+            "O Rastejante Pálido desaba de lado, os membros ainda se contraindo em ângulos errados. "
+            "Mesmo imóvel, sua cabeça continua voltada para você por alguns segundos antes de finalmente ceder."
+),
+        "pontos": 40,
     },
     (11, 6): {
         "nome": "Carcereiro sem Rosto",
@@ -287,6 +313,11 @@ INIMIGOS_INICIAIS = {
             "Onde deveria haver um rosto existe pele lisa costurada com fio preto. "
             "Quatro braços emergem de seu tórax e cada mão termina em dedos cobertos por pequenas bocas."
         ),
+        "mensagem_derrota": (
+            "O Carcereiro sem Rosto cambaleia, como se o próprio corpo demorasse a entender que morreu. "
+            "As pequenas bocas em seus dedos se abrem uma última vez, soltando um coro baixo e úmido. "
+            "Então a criatura desaba entre os ossos e não se levanta novamente."
+),
         "pontos": 150,
     },
 }
@@ -605,13 +636,18 @@ def observar_direcao(jogador, direcao, inimigos, paredes_conhecidas):
             print("Você percebe movimento adiante.")
 
 
-def descrever_local(jogador, itens_no_mapa, inimigos):
+def descrever_local(jogador, itens_no_mapa, inimigos, descricoes_geradas):
     pos = jogador["posicao"]
+
     print("\n" + "=" * 60)
+
     if pos in DESCRICOES:
         print(DESCRICOES[pos])
     else:
-        print(descricao_ambiente_aleatoria())
+        if pos not in descricoes_geradas:
+            descricoes_geradas[pos] = random.choice(DESCRICOES_ALEATORIAS)
+
+        print(descricoes_geradas[pos])
 
     if pos in itens_no_mapa and itens_no_mapa[pos]:
         nomes = ", ".join(item["nome"] for item in itens_no_mapa[pos])
@@ -773,7 +809,7 @@ def combate(jogador, inimigo):
             continue
 
         if inimigo["vida"] <= 0:
-            print(f"\n{inimigo['nome']} cai. Por alguns segundos, ainda tenta respirar.")
+            print(f"\n{inimigo['mensagem_derrota']}")
             jogador["pontos"] += inimigo["pontos"]
             return "venceu"
 
@@ -900,6 +936,7 @@ def jogar():
     obstaculos_resolvidos = set()
     visitados = {POSICAO_INICIAL}
     paredes_conhecidas = set()
+    descricoes_geradas = {}
 
     print("\n" + "=" * 60)
     print("THE DUNGEONEER")
@@ -911,7 +948,12 @@ def jogar():
         "Dizem também que ninguém que encontrou as três voltou para confirmar."
     )
 
-    descrever_local(jogador, itens_no_mapa, inimigos)
+    descrever_local(
+    jogador,
+    itens_no_mapa,
+    inimigos,
+    descricoes_geradas
+)
     ajuda()
 
     while jogador["vida"] > 0:
@@ -953,7 +995,12 @@ def jogar():
 
                 jogador["posicao"] = destino
                 visitados.add(destino)
-                descrever_local(jogador, itens_no_mapa, inimigos)
+                descrever_local(
+    jogador,
+    itens_no_mapa,
+    inimigos,
+    descricoes_geradas
+)
                 jogador["pontos"] += 250
                 print(
                     "\nAs três chaves giram ao mesmo tempo.\n"
@@ -969,7 +1016,12 @@ def jogar():
             posicao_anterior = jogador["posicao"]
             jogador["posicao"] = destino
             visitados.add(destino)
-            descrever_local(jogador, itens_no_mapa, inimigos)
+            descrever_local(
+    jogador,
+    itens_no_mapa,
+    inimigos,
+    descricoes_geradas
+)
 
             # Combate ao entrar em um local ocupado.
             if destino in inimigos and inimigos[destino]["vida"] > 0:
@@ -986,7 +1038,12 @@ def jogar():
             observar_direcao(jogador, direcao, inimigos, paredes_conhecidas)
 
         elif comando == "examinar":
-            descrever_local(jogador, itens_no_mapa, inimigos)
+            descrever_local(
+    jogador,
+    itens_no_mapa,
+    inimigos,
+    descricoes_geradas
+)
 
         elif comando in ("pegar", "pegar item", "pegar itens"):
             pegar_itens(jogador, itens_no_mapa)
