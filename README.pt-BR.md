@@ -96,7 +96,7 @@ Encontrar as **três chaves** e utilizá-las para abrir o portão final.
 
 ```bash
 cd the-dungeoneer
-python the_dungeoneer.py
+python PT_the_dungeoneer.py
 ```
 
 Atualmente, nenhuma biblioteca externa é necessária.
