@@ -96,7 +96,7 @@ Python 3 is required.
 
 ```bash
 cd the-dungeoneer
-python the_dungeoneer.py
+python EN_the_dungeoneer.py
 ```
 
 No external Python packages are currently required.
